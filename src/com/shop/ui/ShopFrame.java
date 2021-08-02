@@ -16,7 +16,7 @@ public class ShopFrame extends JFrame {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		
 		int width = screenSize.width;
-		int height = screenSize.height;
+		int height = screenSize.height  - 30;
 		
 		setName(getClass().getSimpleName());
 		setPreferredSize(new Dimension(width, height));
