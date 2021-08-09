@@ -1,7 +1,12 @@
 package com.shop.ui;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.ScrollPane;
 import java.awt.Toolkit;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -15,15 +20,33 @@ import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
+import javax.swing.border.LineBorder;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
+import javax.swing.table.DefaultTableModel;
+
+import com.shop.ui.swing.frame.ShopFrame;
+import com.shop.ui.swing.model.DataBaseTableModel;
+import com.shop.ui.swing.panel.LayerPanel;
+import com.shop.ui.swing.panel.LoginPanel;
+import com.shop.ui.swing.panel.OptionPanel;
+import com.shop.ui.swing.panel.OrderListPanel;
+import com.shop.ui.swing.panel.OrderPanel;
+import com.shop.ui.swing.panel.PayCardPanel;
+import com.shop.ui.swing.panel.PayCashPanel;
+import com.shop.ui.swing.panel.SaleListPanel;
+import com.shop.ui.swing.panel.SalePanel;
 
 public final class UIBuilder {
 
@@ -44,8 +67,11 @@ public final class UIBuilder {
 	private JDesktopPane desktopPane;
 	
 	private JInternalFrame internalOrderListFrame;
+	private JInternalFrame internalNewOrderFrame;
 	
 	private JButton loginBTN;
+	
+	private static final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 	
 	private UIBuilder() {}
 	
@@ -237,13 +263,15 @@ public final class UIBuilder {
 		
 		if(internalOrderListFrame == null) {
 			
-			Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-			
 			internalOrderListFrame = new JInternalFrame("Список заказов", true, true, false, true);
 			internalOrderListFrame.setSize(new Dimension((int)screenSize.getWidth(), (int)screenSize.getHeight() -  160));
 			internalOrderListFrame.setLocation(0, 100);
 			internalOrderListFrame.setMaximumSize(new Dimension((int)screenSize.getWidth(), (int)screenSize.getHeight() -  160));
 			
+			orderListPanel = new OrderListPanel();
+			initOrderListPanel(orderListPanel);
+			
+			internalOrderListFrame.add(orderListPanel);
 			
 			desktopPane.add(internalOrderListFrame);
 			
@@ -254,9 +282,210 @@ public final class UIBuilder {
 				public void internalFrameClosing(InternalFrameEvent e) {
 					
 					internalOrderListFrame.setVisible(false);
-					internalOrderListFrame = null;
+//					internalOrderListFrame = null;
 				}
 			});
+		} else {
+			
+			internalOrderListFrame.setVisible(true);
+		}
+	}
+	
+	private void initOrderListPanel(OrderListPanel orderPanel) {
+		
+		SpringLayout springLayout = new SpringLayout();
+		BorderLayout borderLayout = new BorderLayout();
+		
+		JPanel buttonPanel = new JPanel(springLayout);
+		buttonPanel.setPreferredSize(new Dimension(orderPanel.getWidth(), 40));
+		
+		JPanel tablePanel = new JPanel(borderLayout);
+		
+		JButton buttonOrderCreate = new JButton();
+		buttonOrderCreate.setPreferredSize(new Dimension(19, 19));
+		buttonOrderCreate.setToolTipText("Создать новый заказ");
+		buttonOrderCreate.addMouseListener(new MouseAdapter() {
+			
+			public void mouseClicked(MouseEvent e) {
+				
+				initNewOrder();
+			}
+		});
+		
+		JButton buttonOrderEdit = new JButton();
+		buttonOrderEdit.setPreferredSize(new Dimension(19, 19));
+		buttonOrderEdit.setToolTipText("Изменить текущий выбранный заказ");
+		
+		JButton buttonOrderDelete = new JButton();
+		buttonOrderDelete.setPreferredSize(new Dimension(19, 19));
+		buttonOrderDelete.setToolTipText("Пометить выбранный заказ на удаление");
+		
+		JButton buttonOrderState = new JButton();
+		buttonOrderState.setPreferredSize(new Dimension(19, 19));
+		buttonOrderState.setToolTipText("Узнать структуру заказа");
+		
+		JButton buttonSortByColumn = new JButton();
+		buttonSortByColumn.setPreferredSize(new Dimension(19, 19));
+		buttonSortByColumn.setToolTipText("Отбор по значению в выбранном столбце");
+		
+		JButton buttonSortByDate = new JButton();
+		buttonSortByDate.setPreferredSize(new Dimension(19, 19));
+		buttonSortByDate.setToolTipText("Установить отбор в интервале дат");
+		
+		DataBaseTableModel tableModel = new DataBaseTableModel(false);
+		
+		/////////
+		JTable table = new JTable(new String[][] {{"Статус", "Дата", "Сумма", "Валюта", "Контрагент", "Ответственный", "Склад"}}, new String[] {"Статус", "Дата", "Сумма", "Валюта", "Контрагент", "Ответственный", "Склад"});
+		table.setSize(new Dimension((int)screenSize.getWidth(), table.getRowHeight() * table.getRowCount()));
+		JScrollPane scrollPane = new JScrollPane(table);
+		tablePanel.add(scrollPane);
+		/////////
+		
+		springLayout.putConstraint(SpringLayout.NORTH, buttonOrderCreate, 10, SpringLayout.NORTH, buttonPanel);
+		springLayout.putConstraint(SpringLayout.WEST, buttonOrderCreate, 20, SpringLayout.WEST, buttonPanel);
+		
+		springLayout.putConstraint(SpringLayout.NORTH, buttonOrderEdit, 10, SpringLayout.NORTH, buttonPanel);
+		springLayout.putConstraint(SpringLayout.WEST, buttonOrderEdit, 5, SpringLayout.EAST, buttonOrderCreate);
+		
+		springLayout.putConstraint(SpringLayout.NORTH, buttonOrderDelete, 10, SpringLayout.NORTH, buttonPanel);
+		springLayout.putConstraint(SpringLayout.WEST, buttonOrderDelete, 5, SpringLayout.EAST, buttonOrderEdit);
+		
+		springLayout.putConstraint(SpringLayout.NORTH, buttonOrderState, 10, SpringLayout.NORTH, buttonPanel);
+		springLayout.putConstraint(SpringLayout.WEST, buttonOrderState, 5, SpringLayout.EAST, buttonOrderDelete);
+		
+		springLayout.putConstraint(SpringLayout.NORTH, buttonSortByColumn, 10, SpringLayout.NORTH, buttonPanel);
+		springLayout.putConstraint(SpringLayout.WEST, buttonSortByColumn, 5, SpringLayout.EAST, buttonOrderState);
+		
+		springLayout.putConstraint(SpringLayout.NORTH, buttonSortByDate, 10, SpringLayout.NORTH, buttonPanel);
+		springLayout.putConstraint(SpringLayout.WEST, buttonSortByDate, 5, SpringLayout.EAST, buttonSortByColumn);
+		
+		buttonPanel.add(buttonOrderCreate);
+		buttonPanel.add(buttonOrderEdit);
+		buttonPanel.add(buttonOrderDelete);
+		buttonPanel.add(buttonOrderState);
+		buttonPanel.add(buttonSortByColumn);
+		buttonPanel.add(buttonSortByDate);
+		buttonPanel.add(tablePanel);
+		
+		orderPanel.add(buttonPanel, BorderLayout.NORTH);
+		orderPanel.add(tablePanel, BorderLayout.CENTER);
+	}
+	
+	private void initNewOrder() {
+		
+		if(internalNewOrderFrame == null) {
+			
+			internalNewOrderFrame = new JInternalFrame("Новый заказ", true,  true, false, true);
+			internalNewOrderFrame.setSize(new Dimension((int)screenSize.getWidth(), (int)screenSize.getHeight() -  160));
+			internalNewOrderFrame.setLocation(0, 100);
+			internalNewOrderFrame.setMaximumSize(new Dimension((int)screenSize.getWidth(), (int)screenSize.getHeight() -  160));
+			
+			JPanel borderPanel = new JPanel();
+			
+			JPanel optionPanel = new JPanel();
+			optionPanel.setPreferredSize(new Dimension((int)(screenSize.getWidth()), 70));
+			
+			JPanel gridPanel = new JPanel();
+			JPanel flowPanel = new JPanel();
+			flowPanel.setPreferredSize(new Dimension((int)(screenSize.getWidth()), 40));
+			flowPanel.setBorder(new LineBorder(Color.BLUE));
+			
+			JPanel tablePanel = new JPanel();
+			tablePanel.setPreferredSize(new Dimension((int) (screenSize.getWidth()), internalNewOrderFrame.getHeight() - optionPanel.getHeight() - flowPanel.getHeight()));
+			tablePanel.setBorder(new LineBorder(Color.RED));
+			
+			SpringLayout springLayout = new SpringLayout();
+			BorderLayout borderLayout = new BorderLayout();
+			GridLayout gridLayout = new GridLayout(1, 2, 10, 0);
+			FlowLayout flowLayout = new FlowLayout(FlowLayout.RIGHT);
+			
+			JTextField customerTextField = new JTextField(12);
+			
+			JLabel totalPriceLabel = new JLabel("Всего: ");
+			
+			JButton choiseCustomerBtn = new JButton();
+			choiseCustomerBtn.setPreferredSize(new Dimension(19, 19));
+			choiseCustomerBtn.setToolTipText("Выбрать покупателя");
+
+			JButton editElementBtn = new JButton();
+			editElementBtn.setPreferredSize(new Dimension(19, 19));
+			editElementBtn.setToolTipText("Изменить выбранный элемент");
+			
+			JButton removeRowBtn = new JButton();
+			removeRowBtn.setPreferredSize(new Dimension(19, 19));
+			removeRowBtn.setToolTipText("Удалить выбраную строку");
+			
+			JButton searchProductBtn = new JButton();
+			searchProductBtn.setPreferredSize(new Dimension(19, 19));
+			searchProductBtn.setToolTipText("Поиск товара из списка");
+			
+			JButton okBtn = new JButton("OK");
+			JButton closeBtn = new JButton("Закрыть");
+			
+			DefaultTableModel tableModel = new DefaultTableModel(new String[][] {{"№", "Наименование", "Характеристика", "Количество", "Цена", "Скидка %", "Сумма", "Всего"}}, new String[] {"№", "Наименование", "Характеристика", "Количество", "Цена", "Скидка %", "Сумма", "Всего"});
+			JTable table = new JTable(tableModel);
+			table.setSize(new Dimension((int)screenSize.getWidth(), table.getRowHeight() * table.getRowCount()));
+			JScrollPane scrollPane = new JScrollPane();
+			scrollPane.add(table);
+			
+			borderPanel.setLayout(borderLayout);
+			optionPanel.setLayout(springLayout);
+			tablePanel.setLayout(new BorderLayout());
+			gridPanel.setLayout(gridLayout);
+			flowPanel.setLayout(flowLayout);
+			
+			springLayout.putConstraint(SpringLayout.NORTH, customerTextField, 10, SpringLayout.NORTH, optionPanel);
+			springLayout.putConstraint(SpringLayout.WEST, customerTextField, 10, SpringLayout.WEST, optionPanel);
+			
+			springLayout.putConstraint(SpringLayout.NORTH, choiseCustomerBtn, 10, SpringLayout.NORTH, optionPanel);
+			springLayout.putConstraint(SpringLayout.WEST, choiseCustomerBtn, 0, SpringLayout.EAST, customerTextField);
+			
+			springLayout.putConstraint(SpringLayout.NORTH, editElementBtn, 30, SpringLayout.NORTH, customerTextField);
+			springLayout.putConstraint(SpringLayout.WEST, editElementBtn, 10, SpringLayout.WEST, optionPanel);
+			
+			springLayout.putConstraint(SpringLayout.NORTH, removeRowBtn, 30, SpringLayout.NORTH, customerTextField);
+			springLayout.putConstraint(SpringLayout.WEST, removeRowBtn, 4, SpringLayout.EAST, editElementBtn);
+			
+			springLayout.putConstraint(SpringLayout.NORTH, searchProductBtn, 30, SpringLayout.NORTH, customerTextField);
+			springLayout.putConstraint(SpringLayout.WEST, searchProductBtn, 4, SpringLayout.EAST, removeRowBtn);
+			
+			gridPanel.add(okBtn);
+			gridPanel.add(closeBtn);
+			
+			flowPanel.add(gridPanel);
+			
+			tablePanel.add(scrollPane, BorderLayout.NORTH);
+			tablePanel.add(totalPriceLabel, BorderLayout.CENTER);
+			
+			optionPanel.add(customerTextField);
+			optionPanel.add(choiseCustomerBtn);
+			optionPanel.add(editElementBtn);
+			optionPanel.add(removeRowBtn);
+			optionPanel.add(searchProductBtn);
+			
+			borderPanel.add(optionPanel, BorderLayout.NORTH);
+			borderPanel.add(tablePanel, BorderLayout.CENTER);
+			borderPanel.add(flowPanel, BorderLayout.SOUTH);
+			
+			internalNewOrderFrame.add(borderPanel);
+			
+			desktopPane.add(internalNewOrderFrame);
+			
+			internalNewOrderFrame.setVisible(true);
+			
+			internalNewOrderFrame.setDefaultCloseOperation(JInternalFrame.DO_NOTHING_ON_CLOSE);
+			internalNewOrderFrame.addInternalFrameListener(new InternalFrameAdapter() {
+				
+				public void internalFrameClosing(InternalFrameEvent e) {
+					
+					internalNewOrderFrame.setVisible(false);
+					internalNewOrderFrame.setDefaultCloseOperation(JInternalFrame.EXIT_ON_CLOSE);
+					internalNewOrderFrame = null;
+				}
+			});
+		} else {
+			
+//			internalNewOrderFrame.requestFocus();
 		}
 	}
 	
